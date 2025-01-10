@@ -212,6 +212,10 @@ const Calculator = () => {
         </div>
         
         <div className="grid grid-cols-4 gap-2">
+          {/* Top row with backspace and clear */}
+          <button onClick={clear} className="operation-btn col-span-2">C</button>
+          <button onClick={handleBackspace} className="operation-btn col-span-2">⌫</button>
+          
           {/* Memory Row */}
           <button onClick={() => handleMemory('MC')} className="function-btn">MC</button>
           <button onClick={() => handleMemory('MR')} className="function-btn">MR</button>
@@ -227,30 +231,28 @@ const Calculator = () => {
           <button onClick={() => handleScientific('ln')} className="function-btn">ln</button>
           <button onClick={() => handleScientific('sqrt')} className="function-btn">√</button>
           <button onClick={() => handleScientific('square')} className="function-btn">x²</button>
-          <button onClick={clear} className="operation-btn">C</button>
+          <button onClick={() => handleOperation('÷')} className="operation-btn">÷</button>
           
           {/* Numbers and Basic Operations */}
           <button onClick={() => handleNumber('7')} className="number-btn">7</button>
           <button onClick={() => handleNumber('8')} className="number-btn">8</button>
           <button onClick={() => handleNumber('9')} className="number-btn">9</button>
-          <button onClick={() => handleOperation('÷')} className="operation-btn">÷</button>
+          <button onClick={() => handleOperation('×')} className="operation-btn">×</button>
           
           <button onClick={() => handleNumber('4')} className="number-btn">4</button>
           <button onClick={() => handleNumber('5')} className="number-btn">5</button>
           <button onClick={() => handleNumber('6')} className="number-btn">6</button>
-          <button onClick={() => handleOperation('×')} className="operation-btn">×</button>
+          <button onClick={() => handleOperation('-')} className="operation-btn">-</button>
           
           <button onClick={() => handleNumber('1')} className="number-btn">1</button>
           <button onClick={() => handleNumber('2')} className="number-btn">2</button>
           <button onClick={() => handleNumber('3')} className="number-btn">3</button>
-          <button onClick={() => handleOperation('-')} className="operation-btn">-</button>
+          <button onClick={() => handleOperation('+')} className="operation-btn">+</button>
           
-          <button onClick={() => handleNumber('0')} className="number-btn">0</button>
+          <button onClick={() => handleNumber('0')} className="number-btn col-span-2">0</button>
           <button onClick={() => handleNumber('.')} className="number-btn">.</button>
           <button onClick={calculate} className="operation-btn">=</button>
-          <button onClick={() => handleOperation('+')} className="operation-btn">+</button>
         </div>
-        <button onClick={handleBackspace} className="operation-btn col-span-4">⌫</button>
       </div>
 
       <div className="bg-card p-6 rounded-3xl shadow-xl w-full max-w-md">
