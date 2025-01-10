@@ -46,6 +46,9 @@ const Calculator = () => {
           case '.':
             handleNumber('.');
             break;
+          case 'Backspace':
+            handleBackspace();
+            break;
         }
       }
     };
@@ -83,6 +86,14 @@ const Calculator = () => {
     }
     setOperation(op);
     setClearNext(true);
+  };
+
+  const handleBackspace = () => {
+    if (display === '0' || display.length === 1) {
+      setDisplay('0');
+    } else {
+      setDisplay(display.slice(0, -1));
+    }
   };
 
   const calculate = () => {
@@ -236,7 +247,7 @@ const Calculator = () => {
           
           <button onClick={() => handleNumber('0')} className="number-btn">0</button>
           <button onClick={() => handleNumber('.')} className="number-btn">.</button>
-          <button onClick={calculate} className="operation-btn">=</button>
+          <button onClick={handleBackspace} className="operation-btn">⌫</button>
           <button onClick={() => handleOperation('+')} className="operation-btn">+</button>
         </div>
       </div>
