@@ -247,9 +247,10 @@ const Calculator = () => {
           
           <button onClick={() => handleNumber('0')} className="number-btn">0</button>
           <button onClick={() => handleNumber('.')} className="number-btn">.</button>
-          <button onClick={handleBackspace} className="operation-btn">⌫</button>
+          <button onClick={calculate} className="operation-btn">=</button>
           <button onClick={() => handleOperation('+')} className="operation-btn">+</button>
         </div>
+        <button onClick={handleBackspace} className="operation-btn col-span-4">⌫</button>
       </div>
 
       <div className="bg-card p-6 rounded-3xl shadow-xl w-full max-w-md">
