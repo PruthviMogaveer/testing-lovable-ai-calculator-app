@@ -22,6 +22,7 @@ interface CalculatorHistoryProps {
 export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProps) => {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editedNote, setEditedNote] = useState<string>('');
+  const [tempNote, setTempNote] = useState<string>('');
 
   const handleEditCalculation = (id: string) => {
     setHistory(prev => prev.map(item => 
@@ -67,21 +68,29 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
 
   const handleAddNote = (id: string) => {
     setEditingNoteId(id);
+    setTempNote('');
     setEditedNote('');
   };
 
   const handleEditNote = (id: string, currentNote: string) => {
     setEditingNoteId(id);
+    setTempNote(currentNote);
     setEditedNote(currentNote);
+  };
+
+  const handleNoteChange = (value: string) => {
+    setTempNote(value);
   };
 
   const saveEditedNote = (id: string) => {
     setHistory(prev => prev.map(item => 
       item.id === id 
-        ? { ...item, note: editedNote }
+        ? { ...item, note: tempNote }
         : item
     ));
     setEditingNoteId(null);
+    setTempNote('');
+    setEditedNote('');
     toast.success("Note updated successfully");
   };
 
@@ -137,8 +146,8 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
               <div className="mt-2 flex gap-2">
                 <input
                   type="text"
-                  value={editedNote}
-                  onChange={(e) => setEditedNote(e.target.value)}
+                  value={tempNote}
+                  onChange={(e) => handleNoteChange(e.target.value)}
                   className="flex-1 px-2 py-1 text-sm bg-secondary/30 rounded border border-secondary/40"
                   placeholder="Add a note..."
                 />
