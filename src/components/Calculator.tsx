@@ -187,6 +187,113 @@ const Calculator = () => {
     setClearNext(false);
   };
 
+  const handleMemory = (operation: string) => {
+    switch (operation) {
+      case 'MC':
+        setMemory(0);
+        toast.success("Memory cleared");
+        break;
+      case 'MR':
+        setDisplay(memory.toString());
+        toast.success("Memory recalled");
+        break;
+      case 'M+':
+        setMemory(memory + parseFloat(display));
+        toast.success("Added to memory");
+        break;
+      case 'M-':
+        setMemory(memory - parseFloat(display));
+        toast.success("Subtracted from memory");
+        break;
+    }
+  };
+
+  const handleScientific = (operation: string) => {
+    const current = parseFloat(display);
+    let result: number;
+
+    switch (operation) {
+      case 'sin':
+        result = Math.sin(current);
+        break;
+      case 'cos':
+        result = Math.cos(current);
+        break;
+      case 'tan':
+        result = Math.tan(current);
+        break;
+      case 'log':
+        if (current <= 0) {
+          toast.error("Invalid input for logarithm");
+          return;
+        }
+        result = Math.log10(current);
+        break;
+      case 'ln':
+        if (current <= 0) {
+          toast.error("Invalid input for natural logarithm");
+          return;
+        }
+        result = Math.log(current);
+        break;
+      case 'sqrt':
+        if (current < 0) {
+          toast.error("Cannot calculate square root of negative number");
+          return;
+        }
+        result = Math.sqrt(current);
+        break;
+      case 'square':
+        result = current * current;
+        break;
+      default:
+        return;
+    }
+
+    setDisplay(result.toString());
+    setClearNext(true);
+  };
+
+  const calculateResult = (num1: number, num2: number, op: string): string => {
+    let result: number;
+    switch (op) {
+      case '+':
+        result = num1 + num2;
+        break;
+      case '-':
+        result = num1 - num2;
+        break;
+      case '×':
+        result = num1 * num2;
+        break;
+      case '÷':
+        if (num2 === 0) {
+          toast.error("Cannot divide by zero");
+          return "Error";
+        }
+        result = num1 / num2;
+        break;
+      default:
+        return "Error";
+    }
+    return result.toString();
+  };
+
+  const handleEditNote = (id: string, currentNote: string) => {
+    setEditingNoteId(id);
+    setEditedNote(currentNote);
+  };
+
+  const saveEditedNote = (id: string) => {
+    setHistory(prev => prev.map(item => 
+      item.id === id 
+        ? { ...item, note: editedNote }
+        : item
+    ));
+    setEditingNoteId(null);
+    toast.success("Note updated successfully");
+  };
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row gap-4 items-start justify-center p-4">
       <div className="bg-card p-6 rounded-3xl shadow-xl w-full max-w-md">
