@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Pencil, Save, Plus } from "lucide-react";
@@ -19,8 +20,8 @@ interface CalculatorHistoryProps {
 }
 
 export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProps) => {
-  const [editingNoteId, setEditingNoteId] = React.useState<string | null>(null);
-  const [editedNote, setEditedNote] = React.useState<string>('');
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [editedNote, setEditedNote] = useState<string>('');
 
   const handleEditCalculation = (id: string) => {
     setHistory(prev => prev.map(item => 
