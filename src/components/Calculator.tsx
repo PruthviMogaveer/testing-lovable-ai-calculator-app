@@ -97,18 +97,41 @@ const Calculator = () => {
     ));
   };
 
-  const saveEditedCalculation = (id: string, newCalculation: string, newResult: string) => {
-    setHistory(prev => prev.map(item => 
-      item.id === id 
-        ? { 
-            ...item, 
-            calculation: newCalculation,
-            result: newResult,
-            isEditing: false 
-          }
-        : item
-    ));
-    toast.success("Calculation updated successfully");
+  const saveEditedCalculation = (id: string, newCalculation: string) => {
+    try {
+      // Split the calculation string into components
+      const [num1Str, op, num2Str] = newCalculation.trim().split(' ');
+      const num1 = parseFloat(num1Str);
+      const num2 = parseFloat(num2Str);
+
+      // Validate the input
+      if (isNaN(num1) || isNaN(num2) || !op.match(/[+\-×÷]/)) {
+        toast.error("Invalid calculation format. Use: number operator number");
+        return;
+      }
+
+      // Calculate the new result
+      const newResult = calculateResult(num1, num2, op);
+      
+      if (newResult === "Error") {
+        toast.error("Invalid calculation");
+        return;
+      }
+
+      setHistory(prev => prev.map(item => 
+        item.id === id 
+          ? { 
+              ...item, 
+              calculation: newCalculation,
+              result: newResult,
+              isEditing: false 
+            }
+          : item
+      ));
+      toast.success("Calculation updated successfully");
+    } catch (error) {
+      toast.error("Invalid calculation format. Use: number operator number");
+    }
   };
 
   const handleAddNote = (id: string) => {
@@ -355,17 +378,23 @@ const Calculator = () => {
                 <div className="mt-2 flex gap-2">
                   <input
                     type="text"
-                    value={item.calculation}
-                    onChange={(e) => {
-                      const [num1, op, num2] = e.target.value.split(' ');
-                      const result = calculateResult(parseFloat(num1), parseFloat(num2), op);
-                      saveEditedCalculation(item.id, e.target.value, result.toString());
+                    defaultValue={item.calculation}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        saveEditedCalculation(item.id, e.currentTarget.value);
+                      }
                     }}
                     className="flex-1 px-2 py-1 text-sm bg-secondary/30 rounded border border-secondary/40"
+                    placeholder="Format: number operator number"
                   />
                   <Button
                     size="sm"
-                    onClick={() => saveEditedCalculation(item.id, item.calculation, item.result)}
+                    onClick={(e) => {
+                      const input = e.currentTarget.parentElement?.querySelector('input');
+                      if (input) {
+                        saveEditedCalculation(item.id, input.value);
+                      }
+                    }}
                     className="px-2"
                   >
                     <Save className="h-4 w-4" />
