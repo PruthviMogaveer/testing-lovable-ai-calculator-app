@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
-import { Pencil, Save } from "lucide-react";
+import { Pencil, Save, Plus } from "lucide-react";
 
 interface HistoryItem {
   id: string;
@@ -10,6 +10,7 @@ interface HistoryItem {
   result: string;
   timestamp: Date;
   note?: string;
+  isEditing?: boolean;
 }
 
 const Calculator = () => {
@@ -84,26 +85,35 @@ const Calculator = () => {
       calculation,
       result,
       timestamp: new Date(),
-      note: currentNote
     };
     setHistory(prev => [historyItem, ...prev]);
-    setCurrentNote('');
   };
 
-  const handleEditNote = (id: string, currentNote: string) => {
-    setEditingNoteId(id);
-    setEditedNote(currentNote || '');
-  };
-
-  const saveEditedNote = (id: string) => {
+  const handleEditCalculation = (id: string) => {
     setHistory(prev => prev.map(item => 
       item.id === id 
-        ? { ...item, note: editedNote }
+        ? { ...item, isEditing: true }
         : item
     ));
-    setEditingNoteId(null);
+  };
+
+  const saveEditedCalculation = (id: string, newCalculation: string, newResult: string) => {
+    setHistory(prev => prev.map(item => 
+      item.id === id 
+        ? { 
+            ...item, 
+            calculation: newCalculation,
+            result: newResult,
+            isEditing: false 
+          }
+        : item
+    ));
+    toast.success("Calculation updated successfully");
+  };
+
+  const handleAddNote = (id: string) => {
+    setEditingNoteId(id);
     setEditedNote('');
-    toast.success("Note updated successfully");
   };
 
   const handleNumber = (num: string) => {
@@ -170,67 +180,11 @@ const Calculator = () => {
     setOperation(null);
   };
 
-  const handleScientific = (func: string) => {
-    const current = parseFloat(display);
-    let result = 0;
-    
-    switch (func) {
-      case 'sin':
-        result = Math.sin(current);
-        break;
-      case 'cos':
-        result = Math.cos(current);
-        break;
-      case 'tan':
-        result = Math.tan(current);
-        break;
-      case 'log':
-        result = Math.log10(current);
-        break;
-      case 'ln':
-        result = Math.log(current);
-        break;
-      case 'sqrt':
-        result = Math.sqrt(current);
-        break;
-      case 'square':
-        result = current * current;
-        break;
-      default:
-        return;
-    }
-    
-    setDisplay(result.toString());
-    setClearNext(true);
-  };
-
   const clear = () => {
     setDisplay('0');
     setLastNumber(null);
     setOperation(null);
     setClearNext(false);
-  };
-
-  const handleMemory = (action: string) => {
-    const current = parseFloat(display);
-    
-    switch (action) {
-      case 'MC':
-        setMemory(0);
-        toast.success("Memory cleared");
-        break;
-      case 'MR':
-        setDisplay(memory.toString());
-        break;
-      case 'M+':
-        setMemory(memory + current);
-        toast.success("Added to memory");
-        break;
-      case 'M-':
-        setMemory(memory - current);
-        toast.success("Subtracted from memory");
-        break;
-    }
   };
 
   return (
@@ -240,27 +194,17 @@ const Calculator = () => {
           <div className="text-right text-4xl font-light truncate">
             {display}
           </div>
-          <input
-            type="text"
-            placeholder="Add a note for this calculation..."
-            value={currentNote}
-            onChange={(e) => setCurrentNote(e.target.value)}
-            className="w-full mt-2 px-2 py-1 bg-secondary/20 rounded border border-secondary/30 text-sm"
-          />
         </div>
         
         <div className="grid grid-cols-4 gap-2">
-          {/* Top row with backspace and clear */}
           <button onClick={clear} className="operation-btn col-span-2">C</button>
           <button onClick={handleBackspace} className="operation-btn col-span-2">⌫</button>
           
-          {/* Memory Row */}
           <button onClick={() => handleMemory('MC')} className="function-btn">MC</button>
           <button onClick={() => handleMemory('MR')} className="function-btn">MR</button>
           <button onClick={() => handleMemory('M+')} className="function-btn">M+</button>
           <button onClick={() => handleMemory('M-')} className="function-btn">M-</button>
           
-          {/* Scientific Functions */}
           <button onClick={() => handleScientific('sin')} className="function-btn">sin</button>
           <button onClick={() => handleScientific('cos')} className="function-btn">cos</button>
           <button onClick={() => handleScientific('tan')} className="function-btn">tan</button>
@@ -271,7 +215,6 @@ const Calculator = () => {
           <button onClick={() => handleScientific('square')} className="function-btn">x²</button>
           <button onClick={() => handleOperation('÷')} className="operation-btn">÷</button>
           
-          {/* Numbers and Basic Operations */}
           <button onClick={() => handleNumber('7')} className="number-btn">7</button>
           <button onClick={() => handleNumber('8')} className="number-btn">8</button>
           <button onClick={() => handleNumber('9')} className="number-btn">9</button>
@@ -301,9 +244,39 @@ const Calculator = () => {
               <div className="text-sm text-muted-foreground">
                 {item.timestamp.toLocaleString()}
               </div>
-              <div className="text-lg font-medium">
-                {item.calculation} = {item.result}
-              </div>
+              {item.isEditing ? (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    value={item.calculation}
+                    onChange={(e) => {
+                      const [num1, op, num2] = e.target.value.split(' ');
+                      const result = calculateResult(parseFloat(num1), parseFloat(num2), op);
+                      saveEditedCalculation(item.id, e.target.value, result.toString());
+                    }}
+                    className="flex-1 px-2 py-1 text-sm bg-secondary/30 rounded border border-secondary/40"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => saveEditedCalculation(item.id, item.calculation, item.result)}
+                    className="px-2"
+                  >
+                    <Save className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-lg font-medium flex justify-between items-center">
+                  <span>{item.calculation} = {item.result}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditCalculation(item.id)}
+                    className="h-6 w-6 p-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               {editingNoteId === item.id ? (
                 <div className="mt-2 flex gap-2">
                   <input
@@ -311,7 +284,7 @@ const Calculator = () => {
                     value={editedNote}
                     onChange={(e) => setEditedNote(e.target.value)}
                     className="flex-1 px-2 py-1 text-sm bg-secondary/30 rounded border border-secondary/40"
-                    placeholder="Edit note..."
+                    placeholder="Add a note..."
                   />
                   <Button
                     size="sm"
@@ -323,15 +296,29 @@ const Calculator = () => {
                 </div>
               ) : (
                 <div className="mt-1 text-sm text-primary/80 italic flex justify-between items-center">
-                  <span>{item.note || "No note"}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditNote(item.id, item.note || '')}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  {item.note ? (
+                    <>
+                      <span>{item.note}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditNote(item.id, item.note || '')}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleAddNote(item.id)}
+                      className="flex gap-1 items-center text-xs"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Note
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
