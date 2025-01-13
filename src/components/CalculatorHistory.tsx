@@ -21,7 +21,6 @@ interface CalculatorHistoryProps {
 
 export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProps) => {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
-  const [editedNote, setEditedNote] = useState<string>('');
   const [tempNote, setTempNote] = useState<string>('');
 
   const handleEditCalculation = (id: string) => {
@@ -34,7 +33,6 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
 
   const saveEditedCalculation = (id: string, newCalculation: string) => {
     try {
-      // Split the calculation string into components
       const parts = newCalculation.trim().split(' ');
       if (parts.length !== 3) {
         toast.error("Invalid calculation format. Use: number operator number");
@@ -76,13 +74,11 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
   const handleAddNote = (id: string) => {
     setEditingNoteId(id);
     setTempNote('');
-    setEditedNote('');
   };
 
   const handleEditNote = (id: string, currentNote: string) => {
     setEditingNoteId(id);
     setTempNote(currentNote);
-    setEditedNote(currentNote);
   };
 
   const handleNoteChange = (value: string) => {
@@ -101,7 +97,6 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
     ));
     setEditingNoteId(null);
     setTempNote('');
-    setEditedNote('');
     toast.success("Note updated successfully");
   };
 
@@ -180,10 +175,10 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
                 </Button>
               </div>
             ) : (
-              <div className="mt-1 text-sm text-primary/80 italic flex justify-between items-center">
+              <div className="mt-2 flex justify-between items-center">
                 {item.note ? (
                   <div className="flex justify-between items-center w-full">
-                    <span>{item.note}</span>
+                    <span className="text-sm text-primary/80 italic">{item.note}</span>
                     <div className="flex gap-1">
                       <Button
                         variant="ghost"
@@ -208,7 +203,7 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
                     variant="ghost"
                     size="sm"
                     onClick={() => handleAddNote(item.id)}
-                    className="flex gap-1 items-center text-xs"
+                    className="flex gap-1 items-center text-xs text-primary hover:text-primary/90"
                   >
                     <Plus className="h-4 w-4" />
                     Add Note
