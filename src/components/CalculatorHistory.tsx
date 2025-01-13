@@ -34,7 +34,14 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
 
   const saveEditedCalculation = (id: string, newCalculation: string) => {
     try {
-      const [num1Str, op, num2Str] = newCalculation.trim().split(' ');
+      // Split the calculation string into components
+      const parts = newCalculation.trim().split(' ');
+      if (parts.length !== 3) {
+        toast.error("Invalid calculation format. Use: number operator number");
+        return;
+      }
+
+      const [num1Str, op, num2Str] = parts;
       const num1 = parseFloat(num1Str);
       const num2 = parseFloat(num2Str);
 
