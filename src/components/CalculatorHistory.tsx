@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
-import { Pencil, Save, Plus } from "lucide-react";
+import { Pencil, Save, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { calculateResult } from "../utils/calculatorOperations";
 
@@ -90,6 +90,10 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
   };
 
   const saveEditedNote = (id: string) => {
+    if (!tempNote.trim()) {
+      toast.error("Note cannot be empty");
+      return;
+    }
     setHistory(prev => prev.map(item => 
       item.id === id 
         ? { ...item, note: tempNote }
@@ -99,6 +103,15 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
     setTempNote('');
     setEditedNote('');
     toast.success("Note updated successfully");
+  };
+
+  const deleteNote = (id: string) => {
+    setHistory(prev => prev.map(item => 
+      item.id === id 
+        ? { ...item, note: undefined }
+        : item
+    ));
+    toast.success("Note deleted successfully");
   };
 
   return (
@@ -169,17 +182,27 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
             ) : (
               <div className="mt-1 text-sm text-primary/80 italic flex justify-between items-center">
                 {item.note ? (
-                  <>
+                  <div className="flex justify-between items-center w-full">
                     <span>{item.note}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditNote(item.id, item.note || '')}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditNote(item.id, item.note || '')}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteNote(item.id)}
+                        className="h-6 w-6 p-0 text-destructive hover:text-destructive/90"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
                   <Button
                     variant="ghost"
