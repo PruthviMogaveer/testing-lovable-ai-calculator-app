@@ -61,7 +61,9 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
               ...item, 
               calculation: newCalculation,
               result: newResult,
-              isEditing: false 
+              isEditing: false,
+              // Don't modify the note when saving calculation
+              note: item.note 
             }
           : item
       ));
