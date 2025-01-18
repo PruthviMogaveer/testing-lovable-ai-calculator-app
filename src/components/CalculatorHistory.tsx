@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
-import { Pencil, Save, Plus, Trash2 } from "lucide-react";
+import { Pencil, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { calculateResult } from "../utils/calculatorOperations";
 
@@ -10,7 +10,6 @@ export interface HistoryItem {
   calculation: string;
   result: string;
   timestamp: Date;
-  note?: string;
   isEditing?: boolean;
 }
 
@@ -20,9 +19,6 @@ interface CalculatorHistoryProps {
 }
 
 export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProps) => {
-  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
-  const [tempNote, setTempNote] = useState<string>('');
-
   const handleEditCalculation = (id: string) => {
     setHistory(prev => prev.map(item => 
       item.id === id 
@@ -71,46 +67,8 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
     }
   };
 
-  const handleAddNote = (id: string) => {
-    const shouldAdd = window.confirm("Would you like to add a note to this calculation?");
-    if (!shouldAdd) return;
-
-    const noteName = window.prompt("Enter a name for this note:");
-    if (!noteName) {
-      toast.error("Note name is required");
-      return;
-    }
-
-    setEditingNoteId(id);
-    setTempNote(noteName);
-  };
-
-  const handleEditNote = (id: string, currentNote: string) => {
-    setEditingNoteId(id);
-    setTempNote(currentNote);
-  };
-
-  const handleNoteChange = (value: string) => {
-    setTempNote(value);
-  };
-
-  const saveEditedNote = (id: string) => {
-    if (!tempNote.trim()) {
-      toast.error("Note cannot be empty");
-      return;
-    }
-    setHistory(prev => prev.map(item => 
-      item.id === id 
-        ? { ...item, note: tempNote }
-        : item
-    ));
-    setEditingNoteId(null);
-    setTempNote('');
-    toast.success("Note updated successfully");
-  };
-
   const deleteCalculation = (id: string) => {
-    const shouldDelete = window.confirm("Are you sure you want to delete this calculation and its note?");
+    const shouldDelete = window.confirm("Are you sure you want to delete this calculation?");
     if (!shouldDelete) return;
 
     setHistory(prev => prev.filter(item => item.id !== id));
@@ -173,40 +131,6 @@ export const CalculatorHistory = ({ history, setHistory }: CalculatorHistoryProp
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            )}
-            {editingNoteId === item.id ? (
-              <div className="mt-2 flex gap-2">
-                <input
-                  type="text"
-                  value={tempNote}
-                  onChange={(e) => handleNoteChange(e.target.value)}
-                  className="flex-1 px-2 py-1 text-sm bg-secondary/30 rounded border border-secondary/40"
-                  placeholder="Add a note..."
-                />
-                <Button
-                  size="sm"
-                  onClick={() => saveEditedNote(item.id)}
-                  className="px-2"
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="mt-2">
-                {item.note ? (
-                  <div className="text-sm text-primary/80 italic">{item.note}</div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleAddNote(item.id)}
-                    className="flex gap-1 items-center text-xs text-primary hover:text-primary/90"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Note
-                  </Button>
-                )}
               </div>
             )}
           </div>
