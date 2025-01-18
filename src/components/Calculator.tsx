@@ -89,11 +89,19 @@ const Calculator = () => {
     const current = parseFloat(display);
     if (lastNumber === null) {
       setLastNumber(current);
+      setOperation(op);
+      setClearNext(true);
     } else if (operation) {
-      calculate();
+      const result = calculateResult(lastNumber, current, operation);
+      if (result !== "Error") {
+        setDisplay(result);
+        setLastNumber(parseFloat(result));
+        setOperation(op);
+        setClearNext(true);
+      } else {
+        clear();
+      }
     }
-    setOperation(op);
-    setClearNext(true);
   };
 
   const handleBackspace = () => {
