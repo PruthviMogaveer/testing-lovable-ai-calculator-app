@@ -1,220 +1,193 @@
-import { useState, useEffect } from 'react';
-import { toast } from "sonner";
-import { Button } from "./ui/button";
+import { useState } from "react";
 import { CalculatorDisplay } from "./CalculatorDisplay";
-import { CalculatorHistory, type HistoryItem } from "./CalculatorHistory";
-import { calculateResult, handleScientificCalculation } from "../utils/calculatorOperations";
+import { CalculatorHistory } from "./CalculatorHistory";
+import { toast } from "sonner";
 
 const Calculator = () => {
-  const [display, setDisplay] = useState('0');
+  const [display, setDisplay] = useState("0");
+  const [currentCalculation, setCurrentCalculation] = useState("");
   const [memory, setMemory] = useState<number>(0);
-  const [lastNumber, setLastNumber] = useState<number | null>(null);
-  const [operation, setOperation] = useState<string | null>(null);
-  const [clearNext, setClearNext] = useState(false);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-
-  useEffect(() => {
-    const savedHistory = localStorage.getItem('calculatorHistory');
-    if (savedHistory) {
-      const parsedHistory = JSON.parse(savedHistory).map((item: any) => ({
-        ...item,
-        timestamp: new Date(item.timestamp)
-      }));
-      setHistory(parsedHistory);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('calculatorHistory', JSON.stringify(history));
-  }, [history]);
-
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key >= '0' && e.key <= '9') {
-        handleNumber(e.key);
-      } else {
-        switch (e.key) {
-          case '+':
-            handleOperation('+');
-            break;
-          case '-':
-            handleOperation('-');
-            break;
-          case '*':
-            handleOperation('×');
-            break;
-          case '/':
-            handleOperation('÷');
-            break;
-          case 'Enter':
-            calculate();
-            break;
-          case 'Escape':
-            clear();
-            break;
-          case '.':
-            handleNumber('.');
-            break;
-          case 'Backspace':
-            handleBackspace();
-            break;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [display, lastNumber, operation]);
-
-  const addToHistory = (calculation: string, result: string) => {
-    const historyItem: HistoryItem = {
-      id: Date.now().toString(),
-      calculation,
-      result,
-      timestamp: new Date(),
-    };
-    setHistory(prev => [historyItem, ...prev]);
-  };
+  const [history, setHistory] = useState<Array<{ expression: string; result: string; timestamp: Date }>>([]);
 
   const handleNumber = (num: string) => {
-    if (clearNext) {
+    if (display === "0") {
       setDisplay(num);
-      setClearNext(false);
     } else {
-      setDisplay(display === '0' ? num : display + num);
+      setDisplay(display + num);
+    }
+    setCurrentCalculation(currentCalculation + num);
+  };
+
+  const handleOperator = (operator: string) => {
+    setDisplay("0");
+    setCurrentCalculation(currentCalculation + " " + operator + " ");
+  };
+
+  const handleEquals = () => {
+    try {
+      const result = eval(currentCalculation);
+      setDisplay(result.toString());
+      setHistory([
+        { expression: currentCalculation, result: result.toString(), timestamp: new Date() },
+        ...history,
+      ]);
+      setCurrentCalculation(result.toString());
+    } catch (error) {
+      toast.error("Invalid calculation");
     }
   };
 
-  const handleOperation = (op: string) => {
-    const current = parseFloat(display);
-    if (lastNumber === null) {
-      setLastNumber(current);
-      setOperation(op);
-      setClearNext(true);
-    } else if (operation) {
-      const result = calculateResult(lastNumber, current, operation);
-      if (result !== "Error") {
-        setDisplay(result);
-        setLastNumber(parseFloat(result));
-        setOperation(op);
-        setClearNext(true);
-      } else {
-        clear();
-      }
-    }
+  const handleClear = () => {
+    setDisplay("0");
+    setCurrentCalculation("");
   };
 
   const handleBackspace = () => {
-    if (display === '0' || display.length === 1) {
-      setDisplay('0');
+    if (display.length === 1) {
+      setDisplay("0");
     } else {
       setDisplay(display.slice(0, -1));
     }
+    setCurrentCalculation(currentCalculation.slice(0, -1));
   };
 
-  const calculate = () => {
-    if (lastNumber === null || !operation) return;
-    
-    const current = parseFloat(display);
-    const calculation = `${lastNumber} ${operation} ${current}`;
-    const result = calculateResult(lastNumber, current, operation);
-    
-    if (result === "Error") {
-      clear();
-      return;
-    }
-    
-    setDisplay(result);
-    addToHistory(calculation, result);
-    setLastNumber(null);
-    setOperation(null);
-  };
-
-  const clear = () => {
-    setDisplay('0');
-    setLastNumber(null);
-    setOperation(null);
-    setClearNext(false);
-  };
-
-  const handleMemory = (operation: string) => {
-    const current = parseFloat(display);
-    switch (operation) {
-      case 'MC':
-        setMemory(0);
-        toast.success("Memory cleared");
-        break;
-      case 'MR':
-        setDisplay(memory.toString());
-        toast.success("Memory recalled");
-        break;
-      case 'M+':
-        setMemory(memory + current);
-        toast.success("Added to memory");
-        break;
-      case 'M-':
-        setMemory(memory - current);
-        toast.success("Subtracted from memory");
-        break;
+  const handleDecimal = () => {
+    if (!display.includes(".")) {
+      setDisplay(display + ".");
+      setCurrentCalculation(currentCalculation + ".");
     }
   };
 
-  const handleScientific = (operation: string) => {
-    const current = parseFloat(display);
-    const result = handleScientificCalculation(operation, current);
-    
-    if (result !== "Error") {
-      setDisplay(result);
-      setClearNext(true);
+  const handlePlusMinus = () => {
+    setDisplay((parseFloat(display) * -1).toString());
+    setCurrentCalculation((parseFloat(currentCalculation) * -1).toString());
+  };
+
+  const handlePercentage = () => {
+    const result = parseFloat(display) / 100;
+    setDisplay(result.toString());
+    setCurrentCalculation(result.toString());
+  };
+
+  const handleMemoryClear = () => {
+    setMemory(0);
+    toast.success("Memory cleared");
+  };
+
+  const handleMemoryRecall = () => {
+    setDisplay(memory.toString());
+    setCurrentCalculation(memory.toString());
+  };
+
+  const handleMemoryAdd = () => {
+    setMemory(memory + parseFloat(display));
+    toast.success("Added to memory");
+  };
+
+  const handleMemorySubtract = () => {
+    setMemory(memory - parseFloat(display));
+    toast.success("Subtracted from memory");
+  };
+
+  const handleScientificFunction = (func: string) => {
+    const num = parseFloat(display);
+    let result: number;
+
+    switch (func) {
+      case 'sin':
+        result = Math.sin(num);
+        break;
+      case 'cos':
+        result = Math.cos(num);
+        break;
+      case 'tan':
+        result = Math.tan(num);
+        break;
+      case 'log':
+        result = Math.log10(num);
+        break;
+      case 'ln':
+        result = Math.log(num);
+        break;
+      default:
+        return;
     }
+
+    setDisplay(result.toString());
+    setCurrentCalculation(`${func}(${num}) = ${result}`);
+  };
+
+  const handleSquare = () => {
+    const num = parseFloat(display);
+    const result = num * num;
+    setDisplay(result.toString());
+    setCurrentCalculation(`${num}² = ${result}`);
+  };
+
+  const handleSquareRoot = () => {
+    const num = parseFloat(display);
+    const result = Math.sqrt(num);
+    setDisplay(result.toString());
+    setCurrentCalculation(`√${num} = ${result}`);
+  };
+
+  const handlePower = () => {
+    setCurrentCalculation(currentCalculation + "**");
+    setDisplay("0");
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row gap-4 items-start justify-center p-4">
-      <div className="bg-card p-6 rounded-3xl shadow-xl w-full max-w-md">
+    <div className="w-full max-w-md mx-auto">
+      <div className="bg-card p-6 rounded-3xl shadow-xl space-y-4">
         <CalculatorDisplay display={display} />
-        
         <div className="grid grid-cols-4 gap-2">
-          <button onClick={clear} className="operation-btn col-span-2">C</button>
-          <button onClick={handleBackspace} className="operation-btn col-span-2">⌫</button>
-          
-          <button onClick={() => handleMemory('MC')} className="function-btn">MC</button>
-          <button onClick={() => handleMemory('MR')} className="function-btn">MR</button>
-          <button onClick={() => handleMemory('M+')} className="function-btn">M+</button>
-          <button onClick={() => handleMemory('M-')} className="function-btn">M-</button>
-          
-          <button onClick={() => handleScientific('sin')} className="function-btn">sin</button>
-          <button onClick={() => handleScientific('cos')} className="function-btn">cos</button>
-          <button onClick={() => handleScientific('tan')} className="function-btn">tan</button>
-          <button onClick={() => handleScientific('log')} className="function-btn">log</button>
-          
-          <button onClick={() => handleScientific('ln')} className="function-btn">ln</button>
-          <button onClick={() => handleScientific('sqrt')} className="function-btn">√</button>
-          <button onClick={() => handleScientific('square')} className="function-btn">x²</button>
-          <button onClick={() => handleOperation('÷')} className="operation-btn">÷</button>
-          
-          <button onClick={() => handleNumber('7')} className="number-btn">7</button>
-          <button onClick={() => handleNumber('8')} className="number-btn">8</button>
-          <button onClick={() => handleNumber('9')} className="number-btn">9</button>
-          <button onClick={() => handleOperation('×')} className="operation-btn">×</button>
-          
-          <button onClick={() => handleNumber('4')} className="number-btn">4</button>
-          <button onClick={() => handleNumber('5')} className="number-btn">5</button>
-          <button onClick={() => handleNumber('6')} className="number-btn">6</button>
-          <button onClick={() => handleOperation('-')} className="operation-btn">-</button>
-          
-          <button onClick={() => handleNumber('1')} className="number-btn">1</button>
-          <button onClick={() => handleNumber('2')} className="number-btn">2</button>
-          <button onClick={() => handleNumber('3')} className="number-btn">3</button>
-          <button onClick={() => handleOperation('+')} className="operation-btn">+</button>
-          
-          <button onClick={() => handleNumber('0')} className="number-btn col-span-2">0</button>
-          <button onClick={() => handleNumber('.')} className="number-btn">.</button>
-          <button onClick={calculate} className="operation-btn">=</button>
+          {/* Memory Functions */}
+          <button className="function-btn" onClick={() => handleMemoryClear()}>MC</button>
+          <button className="function-btn" onClick={() => handleMemoryRecall()}>MR</button>
+          <button className="function-btn" onClick={() => handleMemoryAdd()}>M+</button>
+          <button className="function-btn" onClick={() => handleMemorySubtract()}>M-</button>
+
+          {/* Scientific Functions */}
+          <button className="function-btn" onClick={() => handleScientificFunction('sin')}>sin</button>
+          <button className="function-btn" onClick={() => handleScientificFunction('cos')}>cos</button>
+          <button className="function-btn" onClick={() => handleScientificFunction('tan')}>tan</button>
+          <button className="function-btn" onClick={() => handleScientificFunction('log')}>log</button>
+
+          {/* Additional Operations */}
+          <button className="function-btn" onClick={() => handleSquare()}>x²</button>
+          <button className="function-btn" onClick={() => handleSquareRoot()}>√</button>
+          <button className="function-btn" onClick={() => handlePower()}>^</button>
+          <button className="function-btn" onClick={() => handleScientificFunction('ln')}>ln</button>
+
+          {/* Clear and Basic Operations */}
+          <button className="function-btn" onClick={() => handleClear()}>C</button>
+          <button className="function-btn" onClick={() => handleBackspace()}>⌫</button>
+          <button className="function-btn" onClick={() => handlePercentage()}>%</button>
+          <button className="operation-btn" onClick={() => handleOperator('/')}>/</button>
+
+          {/* Numbers and Operations */}
+          <button className="number-btn" onClick={() => handleNumber('7')}>7</button>
+          <button className="number-btn" onClick={() => handleNumber('8')}>8</button>
+          <button className="number-btn" onClick={() => handleNumber('9')}>9</button>
+          <button className="operation-btn" onClick={() => handleOperator('*')}>×</button>
+
+          <button className="number-btn" onClick={() => handleNumber('4')}>4</button>
+          <button className="number-btn" onClick={() => handleNumber('5')}>5</button>
+          <button className="number-btn" onClick={() => handleNumber('6')}>6</button>
+          <button className="operation-btn" onClick={() => handleOperator('-')}>-</button>
+
+          <button className="number-btn" onClick={() => handleNumber('1')}>1</button>
+          <button className="number-btn" onClick={() => handleNumber('2')}>2</button>
+          <button className="number-btn" onClick={() => handleNumber('3')}>3</button>
+          <button className="operation-btn" onClick={() => handleOperator('+')}>+</button>
+
+          <button className="number-btn" onClick={() => handleNumber('0')}>0</button>
+          <button className="number-btn" onClick={() => handleDecimal()}>.</button>
+          <button className="number-btn" onClick={() => handlePlusMinus()}>±</button>
+          <button className="operation-btn" onClick={() => handleEquals()}>=</button>
         </div>
       </div>
-
-      <CalculatorHistory history={history} setHistory={setHistory} />
+      <CalculatorHistory history={history} />
     </div>
   );
 };
