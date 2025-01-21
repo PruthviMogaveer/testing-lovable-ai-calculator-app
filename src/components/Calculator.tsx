@@ -2,12 +2,13 @@ import { useState } from "react";
 import { CalculatorDisplay } from "./CalculatorDisplay";
 import { CalculatorHistory } from "./CalculatorHistory";
 import { toast } from "sonner";
+import { HistoryItem } from "./CalculatorHistory";
 
 const Calculator = () => {
   const [display, setDisplay] = useState("0");
   const [currentCalculation, setCurrentCalculation] = useState("");
   const [memory, setMemory] = useState<number>(0);
-  const [history, setHistory] = useState<Array<{ expression: string; result: string; timestamp: Date }>>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
 
   const handleNumber = (num: string) => {
     if (display === "0") {
@@ -28,7 +29,12 @@ const Calculator = () => {
       const result = eval(currentCalculation);
       setDisplay(result.toString());
       setHistory([
-        { expression: currentCalculation, result: result.toString(), timestamp: new Date() },
+        {
+          id: crypto.randomUUID(),
+          calculation: currentCalculation,
+          result: result.toString(),
+          timestamp: new Date()
+        },
         ...history,
       ]);
       setCurrentCalculation(result.toString());
@@ -187,7 +193,7 @@ const Calculator = () => {
           <button className="operation-btn" onClick={() => handleEquals()}>=</button>
         </div>
       </div>
-      <CalculatorHistory history={history} />
+      <CalculatorHistory history={history} setHistory={setHistory} />
     </div>
   );
 };
