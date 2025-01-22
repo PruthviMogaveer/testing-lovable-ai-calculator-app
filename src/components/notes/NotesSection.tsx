@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,8 @@ export const NotesSection = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [calculation, setCalculation] = useState("");
+  const [result, setResult] = useState("");
 
   const handleAddNote = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +33,12 @@ export const NotesSection = () => {
       id: Date.now().toString(),
       title,
       description,
-      calculations: [],
+      calculations: calculation && result ? [{
+        id: crypto.randomUUID(),
+        expression: calculation,
+        result: result,
+        timestamp: new Date()
+      }] : [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -38,8 +46,19 @@ export const NotesSection = () => {
     setNotes((prev) => [...prev, newNote]);
     setTitle("");
     setDescription("");
+    setCalculation("");
+    setResult("");
     setIsOpen(false);
     toast.success("Note added successfully");
+  };
+
+  const handleCalculate = () => {
+    try {
+      const calculatedResult = eval(calculation);
+      setResult(calculatedResult.toString());
+    } catch (error) {
+      toast.error("Invalid calculation");
+    }
   };
 
   return (
@@ -53,6 +72,9 @@ export const NotesSection = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Note</DialogTitle>
+              <DialogDescription>
+                Add a new note with an optional calculation.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddNote} className="space-y-4">
               <div>
@@ -68,6 +90,23 @@ export const NotesSection = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
+              </div>
+              <div className="space-y-2">
+                <Input
+                  placeholder="Enter calculation (e.g., 2 + 2)"
+                  value={calculation}
+                  onChange={(e) => setCalculation(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Button type="button" variant="secondary" onClick={handleCalculate}>
+                    Calculate
+                  </Button>
+                  {result && (
+                    <div className="flex items-center">
+                      <span className="text-sm">Result: {result}</span>
+                    </div>
+                  )}
+                </div>
               </div>
               <Button type="submit">Save Note</Button>
             </form>
