@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CalculatorDisplay } from "./CalculatorDisplay";
 import { CalculatorHistory } from "./CalculatorHistory";
 import { toast } from "sonner";
@@ -10,6 +10,40 @@ const Calculator = () => {
   const [memory, setMemory] = useState<number>(0);
   const [history, setHistory] = useState<HistoryItem[]>([]);
 
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      const key = event.key;
+
+      // Handle numbers
+      if (/[0-9]/.test(key)) {
+        handleNumber(key);
+      }
+      // Handle operators
+      else if (['+', '-', '*', '/', '^'].includes(key)) {
+        handleOperator(key);
+      }
+      // Handle equals and enter
+      else if (key === '=' || key === 'Enter') {
+        handleEquals();
+      }
+      // Handle decimal
+      else if (key === '.') {
+        handleDecimal();
+      }
+      // Handle backspace
+      else if (key === 'Backspace') {
+        handleBackspace();
+      }
+      // Handle escape (clear)
+      else if (key === 'Escape') {
+        handleClear();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentCalculation]); // Add dependencies here
+
   const handleNumber = (num: string) => {
     if (display === "0") {
       setDisplay(num);
@@ -20,8 +54,14 @@ const Calculator = () => {
   };
 
   const handleOperator = (operator: string) => {
+    // If there's a previous calculation in history, use its result
+    if (history.length > 0 && currentCalculation === "") {
+      const previousResult = history[0].result;
+      setCurrentCalculation(previousResult + " " + operator + " ");
+    } else {
+      setCurrentCalculation(currentCalculation + " " + operator + " ");
+    }
     setDisplay("0");
-    setCurrentCalculation(currentCalculation + " " + operator + " ");
   };
 
   const handleEquals = () => {
@@ -193,7 +233,14 @@ const Calculator = () => {
           <button className="operation-btn" onClick={() => handleEquals()}>=</button>
         </div>
       </div>
-      <CalculatorHistory history={history} setHistory={setHistory} />
+      <CalculatorHistory 
+        history={history} 
+        setHistory={setHistory}
+        onHistoryItemClick={(item) => {
+          setCurrentCalculation(item.result);
+          setDisplay(item.result);
+        }}
+      />
     </div>
   );
 };
